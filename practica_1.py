@@ -2,18 +2,19 @@ from time import sleep
 import requests
 from random import randint
 
-mutation_factor = 0.05
-POBLATION_SIZE = 1000
+MUTATION_FACTOR = 15
+POBLATION_SIZE = 100
 CRHOMOSOME_SIZE = 32
-ROUNDS = 20
+ROUNDS = 4000
 url = "http://memento.evannai.inf.uc3m.es/age/test?c="
+
 
 def my_call(url, chromosome):
     try:
-        my_request = requests.get(url + "".join(chromosome))
+        my_request = requests.get(url + ''.join(str(x) for x in chromosome))
     except:
         print("Intentando reconectar ...")
-        sleep(0.1)
+        sleep(0.2)
         my_call(url, chromosome)
     return my_request.text
 
@@ -22,7 +23,7 @@ def evaluate(poblation):
 
 
 def create_initial():
-    return [[str(randint(0,1)) for x in range(CRHOMOSOME_SIZE)] for x in range (POBLATION_SIZE)]
+    return [[randint(0,1) for x in range(CRHOMOSOME_SIZE)] for x in range (POBLATION_SIZE)]
 
 def tournament(poblation, fitness_matrix):
     winners = []
@@ -37,24 +38,33 @@ def tournament(poblation, fitness_matrix):
 def mix(winners):
     new_poblation = []
     for i in range(0, POBLATION_SIZE, 2):
-        first_son, second_son = "", ""
+        first_son, second_son = [], []
         for j in range(CRHOMOSOME_SIZE):
-            first_son += winners[i + randint(0,1)][j]
-            second_son += winners[i + randint(0,1)][j]
+            first_son.append(winners[i + randint(0,1)][j])
+            if randint(0,100) < MUTATION_FACTOR:
+                first_son[-1] = '0' if first_son[-1] == '1' else '1'
+            second_son.append(winners[i + randint(0,1)][j])
+            if randint(0,100) < MUTATION_FACTOR:
+                second_son[-1] = '0' if second_son[-1] == '1' else '1' 
         new_poblation.append(first_son)
         new_poblation.append(second_son)
     return new_poblation
     
 def make_generation(poblation):
     fitness_matrix = evaluate(poblation)
-    print("Mejor resultado: ", max(fitness_matrix))
-    return mix(tournament(poblation, fitness_matrix))
+    return mix(tournament(poblation, fitness_matrix)), max(fitness_matrix)
+
+def run():
+    best_fitness = []
+    poblation = create_initial()
+    for i in range(ROUNDS):
+        print("Realizando generacion", i , "...")
+        poblation, best = make_generation(poblation)
+        print("Mejor resultado: ", best)
+        best_fitness.append(best)
+        if i > 10 and abs(best_fitness[-1] - best_fitness[-10]) < 50:
+            return max(best_fitness)
 
 
+print("\El mejor resultado obtenido ha sido:", run(), "\n")
 
-poblation = create_initial()
-for i in range(ROUNDS):
-    print("Realizando generacion " + str(i) + " ...")
-    poblation = make_generation(poblation)
-fitness_matrix = evaluate(poblation)
-print("Mejor resultado:" + str(max(fitness_matrix)) + "\n")
