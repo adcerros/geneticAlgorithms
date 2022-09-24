@@ -8,6 +8,7 @@ CRHOMOSOME_SIZE = 80
 ROUNDS = 5000
 REPLACE_SIZE = 10
 GEN_SIZE = 8
+
 url = "http://memento.evannai.inf.uc3m.es/age/test?c="
 
 
@@ -29,7 +30,7 @@ def create_initial():
 
 def tournament(poblation, fitness_matrix):
     winners = []
-    for i in range(POBLATION_SIZE - 1):
+    for i in range(POBLATION_SIZE):
         round_competitors = []
         for j in range(4):
             pos = randint(0,99)
@@ -50,9 +51,8 @@ def mix(winners):
     new_poblation = []
     for i in range(0, POBLATION_SIZE, 2):
         first_son, second_son = get_sons(winners[i], winners[i+1]) 
-        first_son, second_son = mutation(first_son), mutation(second_son)
-        new_poblation.append(first_son)
-        new_poblation.append(second_son)
+        new_poblation.append(mutation(first_son))
+        new_poblation.append(mutation(second_son))
     return new_poblation
 
 # Se toman los valores bit a bit
@@ -80,17 +80,29 @@ def mutation(son):
 
 def make_generation(poblation):
     fitness_matrix = evaluate(poblation)
-    # Utilizando torneos
-    return mix(tournament(poblation, fitness_matrix)), min(fitness_matrix), int(sum(fitness_matrix) / POBLATION_SIZE)
+    # Utilizando torneos y manteniendo al mejor de cada generacion
+    best_one = poblation[fitness_matrix.index(min(fitness_matrix))]
+    new_poblation = mix(tournament(poblation, fitness_matrix))
+    new_poblation[fitness_matrix.index(max(fitness_matrix))] = best_one
+    return new_poblation, min(fitness_matrix)
     # Sustituyendo a los 10 peores en cada ciclo
     # return mix_and_replace(poblation, fitness_matrix), min(fitness_matrix), int(sum(fitness_matrix) / POBLATION_SIZE)
 
 def run():
+    best_ones_list = []
     poblation = create_initial()
     for i in range(ROUNDS):
         print("Realizando generacion", i , "...")
-        poblation, best, fitness_mean = make_generation(poblation)
-        print("Mejor resultado: ", best, "Fitness medio:", fitness_mean)
+        poblation, best = make_generation(poblation)
+        print("Mejor valor de la generacion:", best)
+        best_ones_list.append(best)
+        if i > 10 and abs(best_ones_list[-10] - best_ones_list[0]) < 10:
+            print("Se ha alcanzado un minimo local")
+            return min(best_ones_list)
+        if best == 0:
+            print("Se ha alcanzado el resultado optimo")
+            return best
+
 
 
 print("\nEl mejor resultado obtenido ha sido:", run(), "\n")
