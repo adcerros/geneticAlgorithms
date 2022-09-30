@@ -9,7 +9,8 @@ ROUNDS = 5000
 REPLACE_SIZE = 10
 GEN_SIZE = 8
 
-url = "http://memento.evannai.inf.uc3m.es/age/test?c="
+#url = "http://163.117.164.219/age/test?c="
+url = "http://163.117.164.219/age/alfa?c="
 
 
 def my_call(url, chromosome):
@@ -89,16 +90,16 @@ def make_generation(poblation):
     # return mix_and_replace(poblation, fitness_matrix), min(fitness_matrix), int(sum(fitness_matrix) / POBLATION_SIZE)
 
 def run():
-    best_ones_list = []
+    #best_ones_list = []
     poblation = create_initial()
     for i in range(ROUNDS):
         print("Realizando generacion", i , "...")
         poblation, best = make_generation(poblation)
         print("Mejor valor de la generacion:", best)
-        best_ones_list.append(best)
-        if i > 10 and abs(best_ones_list[-10] - best_ones_list[0]) < 10:
-            print("Se ha alcanzado un minimo local")
-            return min(best_ones_list)
+        #best_ones_list.append(best)
+        # if i > 10 and abs(best_ones_list[-10] - best_ones_list[0]) < 0.10:
+        #     print("Se ha alcanzado un minimo local")
+        #     return min(best_ones_list)
         if best == 0:
             print("Se ha alcanzado el resultado optimo")
             return best
@@ -108,3 +109,4 @@ def run():
 print("\nEl mejor resultado obtenido ha sido:", run(), "\n")
 
 # MANTENER A LOS 2 MEJORES EN CADA RONDA Y CREAR UN CRITERIO DE PARADA EFICIENTE
+# Añadir una distribucion gaussiana para las mutaciones
