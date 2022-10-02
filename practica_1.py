@@ -31,9 +31,9 @@ def create_initial():
 
 def tournament(poblation, fitness_matrix):
     winners = []
-    for i in range(POBLATION_SIZE):
+    for _ in range(POBLATION_SIZE):
         round_competitors = []
-        for j in range(4):
+        for _ in range(4):
             pos = randint(0,99)
             round_competitors.append([fitness_matrix[pos], pos])
         winners.append(poblation[round_competitors[round_competitors.index(min(round_competitors))][1]])
@@ -81,10 +81,7 @@ def mutation(son):
 
 def make_generation(poblation):
     fitness_matrix = evaluate(poblation)
-    # Utilizando torneos y manteniendo al mejor de cada generacion
-    best_one = poblation[fitness_matrix.index(min(fitness_matrix))]
     new_poblation = mix(tournament(poblation, fitness_matrix))
-    new_poblation[fitness_matrix.index(max(fitness_matrix))] = best_one
     return new_poblation, min(fitness_matrix)
     # Sustituyendo a los 10 peores en cada ciclo
     # return mix_and_replace(poblation, fitness_matrix), min(fitness_matrix), int(sum(fitness_matrix) / POBLATION_SIZE)
