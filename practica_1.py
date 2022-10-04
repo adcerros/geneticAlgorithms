@@ -25,7 +25,7 @@ def evaluate(poblation):
 def create_initial(poblations_size, gens_number):
     return [[randint(0,255) for _ in range(gens_number)] for _ in range(poblations_size)]
 
-def tournament(poblation, fitness_matrix, tournament_size = 4):
+def tournament(poblation, fitness_matrix, tournament_size = 2):
     winners = []
     for _ in range(len(poblation)):
         round_competitors = []
@@ -38,13 +38,13 @@ def tournament(poblation, fitness_matrix, tournament_size = 4):
 def sort_by_fitness(poblation, fitness_matrix):
     return [x for _, x in sorted(zip(fitness_matrix, poblation))]
 
-def replace(poblation, fitness_matrix, replace_size):
-    if replace_size <= 0:
-        return poblation
-    new_poblation = sort_by_fitness(poblation, fitness_matrix)
-    for i in range(replace_size):  
-        new_poblation[-i] = new_poblation[i] 
-    return new_poblation
+# def sort_and_replace(poblation, fitness_matrix, replace_size):
+#     new_poblation = sort_by_fitness(poblation, fitness_matrix)
+#     if replace_size <= 0:
+#         return new_poblation
+#     for i in range(replace_size):  
+#         new_poblation[-i] = new_poblation[i] 
+#     return new_poblation
 
 def mix(winners, mutation_factor, gens_number):
     new_poblation = []
@@ -64,7 +64,7 @@ def get_sons(first_parent, second_parent, gens_number):
     return first_son, second_son
 
 
-def mutation(son, gens_number, mutation_factor, mean=0, standard_derivation=30):
+def mutation(son, gens_number, mutation_factor, mean=0, standard_derivation=5):
     if randint(0,100) < mutation_factor:
         pos = randint(0, gens_number - 1)
         new_gen = son[pos] + int(gauss(mean, standard_derivation))
@@ -76,39 +76,43 @@ def mutation(son, gens_number, mutation_factor, mean=0, standard_derivation=30):
     return son
 
 
-def clone(best_ones, poblation):
+def multiple_clone(best_ones, poblation):
     for i in range(len(best_ones)):
         poblation[randint(0, len(poblation) - 1)] = best_ones[i]
     return poblation
 
+def clone(best_one, poblation):
+    poblation[randint(0, len(poblation) - 1)] = best_one
+    return poblation
 
-def make_generation(poblation, mutation_factor, gens_number, replace_size, clone_size):
+def make_generation(poblation, mutation_factor, gens_number):
     fitness_matrix = evaluate(poblation)
-    sorted_and_replaced_poblation = replace(poblation, fitness_matrix, replace_size)
-    winners = tournament(sorted_and_replaced_poblation, fitness_matrix)
+    winners = tournament(poblation, fitness_matrix)
     new_poblation = mix(winners, mutation_factor, gens_number)
-    new_poblation = clone(sorted_and_replaced_poblation[:clone_size], new_poblation)
-    return new_poblation, min(fitness_matrix)
+
+    #Clonacion del mejor individuo
+    best_one_fitness = min(fitness_matrix)
+    best_one = poblation[fitness_matrix.index(best_one_fitness)]
+    new_poblation = clone(best_one, new_poblation)
+    return new_poblation, best_one_fitness, best_one
 
 
 
-def run(poblations_size = 100, rounds=1000, mutation_factor=25, gens_number=10, replace_size=5, clone_size=1):
+def run(poblations_size=100, rounds=5000, mutation_factor=3, gens_number=10):
     #best_ones_list = []
     poblation = create_initial(poblations_size, gens_number)
     for i in range(rounds):
         print("Realizando generacion", i , "...")
-        poblation, best_value = make_generation(poblation, mutation_factor, gens_number, replace_size, clone_size)
-        print("Mejor valor de la generacion:", best_value)
+        poblation, best_one_fitness, best_one = make_generation(poblation, mutation_factor, gens_number)
+        print("Mejor valor de la generacion:", best_one_fitness)
         #best_ones_list.append(best)
         # if i > 10 and abs(best_ones_list[-10] - best_ones_list[0]) < 0.10:
         #     print("Se ha alcanzado un minimo local")
         #     return min(best_ones_list)
-        if best_value == 0:
+        if best_one_fitness == 0:
             print("Se ha alcanzado el resultado optimo")
-            fitness_matrix = evaluate(poblation)
-            poblation = sort_by_fitness(poblation, fitness_matrix)
-            print("La solucion optima es:", poblation[0])
-            return best_value
+            print("La solucion optima es:", best_one, "Fitness:", best_one_fitness)
+            return best_one_fitness
 
 
 
@@ -121,6 +125,7 @@ run()
 
 
 #TAREAS
+# QUE EL CRUZAMIENTO SEA DE DISTINTOS TIPOS, POR EJEMEPLO COGIENDO SIEMPRE EL MEJOR O UNA GRAN PARTE DEL MEJOR
 # hacer que muten mas al principio y menos al final
 # evaluar la diversidad genetica en cada ronda
 # almacenar los resultados de las rondas y la diversidad genetica
