@@ -154,12 +154,12 @@ def run_multiple(params):
 
 # params = poblation_size, rounds, mutation_factor, gens_number, tournament_size
 
-rounds, gens_number, tournament_size = 200, 10, 2
+rounds, gens_number, tournament_size = 100, 10, 2
 run_multiple([
 [100, rounds, 5, gens_number, tournament_size], 
-[100, rounds, 5, gens_number, tournament_size], 
+[100, rounds, 10, gens_number, tournament_size], 
 [200, rounds, 5, gens_number, tournament_size], 
-[200, rounds, 5, gens_number, tournament_size],
+[200, rounds, 10, gens_number, tournament_size],
 [400, rounds, 5, gens_number, tournament_size],
 [800, rounds, 5, gens_number, tournament_size],
 [200, rounds, 5, gens_number, 3],
