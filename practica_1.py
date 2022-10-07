@@ -5,6 +5,8 @@ import glob
 import matplotlib.pyplot as plt
 from threading import Thread
 import statistics
+import time
+
 
 
 
@@ -50,12 +52,12 @@ def sort_by_fitness(poblation, fitness_matrix):
 #         new_poblation[-i] = new_poblation[i] 
 #     return new_poblation
 
-def mix(winners, mutation_factor, gens_number):
+def mix(winners, mutation_factor, gens_number, standard_derivation):
     new_poblation = []
     for i in range(0, len(winners), 2):
         first_son, second_son = get_sons(winners[i], winners[i+1], gens_number) 
-        new_poblation.append(mutation(first_son, gens_number, mutation_factor))
-        new_poblation.append(mutation(second_son, gens_number, mutation_factor))
+        new_poblation.append(mutation(first_son, gens_number, mutation_factor, standard_derivation))
+        new_poblation.append(mutation(second_son, gens_number, mutation_factor, standard_derivation))
     return new_poblation
 
 
@@ -66,6 +68,7 @@ def get_sons(first_parent, second_parent, gens_number):
         first_son.append(first_parent[i]) if randint(0,1) == 0 else first_son.append(second_parent[i])
         second_son.append(first_parent[i]) if randint(0,1) == 0 else second_son.append(second_parent[i])
     return first_son, second_son
+
 
 # def gets_sons_with_best_parts(first_parent, second_parent, gens_number):
 #     first_son, second_son = [], []
@@ -78,7 +81,7 @@ def get_sons(first_parent, second_parent, gens_number):
 #     return first_son, second_son
 
 
-def mutation(son, gens_number, mutation_factor, mean=0, standard_derivation=15):
+def mutation(son, gens_number, mutation_factor, standard_derivation, mean=0):
     if randint(0,100) < mutation_factor:
         pos = randint(0, gens_number - 1)
         new_gen = son[pos] + int(gauss(mean, standard_derivation))
@@ -99,35 +102,40 @@ def clone(best_one, poblation):
     poblation[randint(0, len(poblation) - 1)] = best_one
     return poblation
 
-def make_generation(poblation, mutation_factor, gens_number, tournament_size):
+def make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation):
     fitness_matrix = evaluate(poblation)
+    #Calculo de homogeneidad de los datos mediante desviacion tipica
+    genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
+    
     winners = tournament(poblation, fitness_matrix, tournament_size)
-    new_poblation = mix(winners, mutation_factor, gens_number)
+    new_poblation = mix(winners, mutation_factor, gens_number, standard_derivation)
 
     #Clonacion del mejor individuo
     best_one_fitness = min(fitness_matrix)
     best_one = poblation[fitness_matrix.index(best_one_fitness)]
     new_poblation = clone(best_one, new_poblation)
 
-    #Calculo de homogeneidad de los datos mediante desviacion tipica
-    genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
     return new_poblation, best_one_fitness, genetic_diversity
 
 
 
-def run(poblations_size=100, rounds=2, mutation_factor=10, gens_number=10, tournament_size=2):
+def run(poblations_size=200, rounds=200, mutation_factor=5, gens_number=10, tournament_size=2, standard_derivation=15):
+    start_time = time.time()
     poblation = create_initial(poblations_size, gens_number)
-    data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_" + str(mutation_factor) + "_mut_" + str(tournament_size) + "_tornmnt_siz.txt", "w+")
+    data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_" + str(mutation_factor) + "_mut_" + str(tournament_size) + "_tornmnt_siz_" + str(standard_derivation) + "_std_dev.txt", "w+")
     try:
         for i in range(rounds):
-            poblation, best_one_fitness, genetic_diversity = make_generation(poblation, mutation_factor, gens_number, tournament_size)
+            poblation, best_one_fitness, genetic_diversity = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness == 0:
                 data_file.close()
+                print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
                 return
         data_file.close()
+        print("Finalizado con:", poblations_size, "poblacion//", rounds, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
     except:
         data_file.close()
+        print("Finalizado con:", poblations_size, "poblacion//", rounds, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
 
 def collect_data():
     files = glob.glob("*.txt")
@@ -136,15 +144,16 @@ def collect_data():
     plt.title("Fitness")
     for index, data in enumerate(rounds_data):
         plt.plot([x for x in range(1, len(data) + 1)], [float(elem[0]) for elem in data], label=files[index])
-    plt.legend(loc="upper left", prop={'size': 6})
+    plt.legend(loc="upper right", prop={'size': 6})
     plt.subplot(1,2,2)
     plt.title("Variedad genetica (desviacion tipica media)")
     for index, data in enumerate(rounds_data):
         plt.plot([x for x in range(1, len(data) + 1)], [float(elem[1]) for elem in data], label=files[index])
-    plt.legend(loc="upper left", prop={'size': 6})
+    plt.legend(loc="upper right", prop={'size': 6})
     plt.show()
 
-def run_multiple(params):
+# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
+def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
     threads = [Thread(target=run, args=param) for param in params]
     for thread in threads:
         thread.start()
@@ -152,19 +161,13 @@ def run_multiple(params):
         thread.join()
 
 
-# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size
+# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
 
-rounds, gens_number, tournament_size = 100, 10, 2
+rounds, gens_number, tournament_size, standard_derivation = 100, 10, 2, 15
 run_multiple([
-[100, rounds, 5, gens_number, tournament_size], 
-[100, rounds, 10, gens_number, tournament_size], 
-[200, rounds, 5, gens_number, tournament_size], 
-[200, rounds, 10, gens_number, tournament_size],
-[400, rounds, 5, gens_number, tournament_size],
-[800, rounds, 5, gens_number, tournament_size],
-[200, rounds, 5, gens_number, 3],
-[400, rounds, 5, gens_number, 4],
-[1000, rounds / 2, 5, gens_number, 5]])
+[400, rounds, 10, gens_number, 4, 50], 
+[800, rounds, 10, gens_number, 4, 50],
+[1500, rounds, 10, gens_number, 4, 50]])
 
 collect_data()
 
