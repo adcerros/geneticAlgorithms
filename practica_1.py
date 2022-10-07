@@ -90,30 +90,25 @@ def make_generation(poblation, mutation_factor, gens_number, tournament_size, st
     fitness_matrix = evaluate(poblation)
     #Calculo de homogeneidad de los datos mediante desviacion tipica
     genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
-    
     winners = tournament(poblation, fitness_matrix, tournament_size)
     new_poblation = mix(winners, mutation_factor, gens_number, standard_derivation)
-
     #Clonacion del mejor individuo
     best_one_fitness = min(fitness_matrix)
     best_one = poblation[fitness_matrix.index(best_one_fitness)]
     new_poblation = clone(best_one, new_poblation)
-
     return new_poblation, best_one_fitness, genetic_diversity, best_one
 
 
 def run(poblations_size=200, rounds=200, mutation_factor=5, gens_number=10, tournament_size=2, standard_derivation=15):
     start_time = time.time()
     poblation = create_initial(poblations_size, gens_number)
-
     genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
-
     data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_" + str(mutation_factor) + "_mut_" + str(tournament_size) + "_tornmnt_siz_" + str(standard_derivation) + "_std_dev.txt", "w+")
     try:
         for i in range(rounds):
             # Calculo dinamico del factor de mutacion y su desviacion tipica
-            # mutation_factor = min(max(int((100 - genetic_diversity) / 10), 3), 25)
-            # standard_derivation = min(max(100 - genetic_diversity, 10), 150)
+            mutation_factor = min(max(int((100 - genetic_diversity) / 8), 3), 25)
+            standard_derivation = min(max(100 - int(genetic_diversity), 10), 150)
             poblation, best_one_fitness, genetic_diversity, best_one = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness == 0:
@@ -144,8 +139,7 @@ def collect_data():
     plt.show()
 
 
-# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
-def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
+def run_multiple(params):
     threads = [Thread(target=run, args=param) for param in params]
     for thread in threads:
         thread.start()
@@ -155,13 +149,20 @@ def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
 
 
 
+
+
+
+# COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
-rounds, gens_number, tournament_size, standard_derivation = 100, 10, 2, 15
-run_multiple([
-[400, rounds, 10, gens_number, 4, 50], 
-[800, rounds, 10, gens_number, 4, 50]])
+run_multiple([ 
+[800, 1, 10, 10, 4, 50]
+])
 
+# /////////////////////
+
+
+
+
+# COMENTAR PARA NO GENERAR LAS GRAFICAS
 collect_data()
-
-
-
+# /////////////////////
