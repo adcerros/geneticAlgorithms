@@ -8,8 +8,8 @@ import statistics
 import time
 
 
-#url = "http://163.117.164.219/age/test?c="
-url = "http://163.117.164.219/age/alfa?c="
+url = "http://163.117.164.219/age/test?c="
+#url = "http://163.117.164.219/age/alfa?c="
 
 
 
@@ -112,8 +112,8 @@ def run(poblations_size=200, rounds=200, mutation_factor=5, gens_number=10, tour
     try:
         for i in range(rounds):
             # Calculo dinamico del factor de mutacion y su desviacion tipica
-            mutation_factor = min(max(int((100 - genetic_diversity) / 10), 3), 25)
-            standard_derivation = min(max(100 - genetic_diversity, 10), 150)
+            # mutation_factor = min(max(int((100 - genetic_diversity) / 10), 3), 25)
+            # standard_derivation = min(max(100 - genetic_diversity, 10), 150)
             poblation, best_one_fitness, genetic_diversity, best_one = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness == 0:
@@ -156,7 +156,7 @@ def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
 
 
 # params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
-rounds, gens_number, tournament_size, standard_derivation = 400, 10, 2, 15
+rounds, gens_number, tournament_size, standard_derivation = 100, 10, 2, 15
 run_multiple([
 [400, rounds, 10, gens_number, 4, 50], 
 [800, rounds, 10, gens_number, 4, 50]])
