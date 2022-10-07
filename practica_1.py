@@ -8,10 +8,9 @@ import statistics
 import time
 
 
+#url = "http://163.117.164.219/age/test?c="
+url = "http://163.117.164.219/age/alfa?c="
 
-
-url = "http://163.117.164.219/age/test?c="
-#url = "http://163.117.164.219/age/alfa?c="
 
 
 def my_call(url, chromosome):
@@ -24,12 +23,14 @@ def my_call(url, chromosome):
         my_call(url, chromosome)
     return my_request.text
 
+
 def evaluate(poblation):
     return [float(my_call(url, elem)) for elem in poblation]
 
 
 def create_initial(poblations_size, gens_number):
     return [[randint(0,255) for _ in range(gens_number)] for _ in range(poblations_size)]
+
 
 def tournament(poblation, fitness_matrix, tournament_size):
     winners = []
@@ -41,16 +42,10 @@ def tournament(poblation, fitness_matrix, tournament_size):
         winners.append(poblation[round_competitors[round_competitors.index(min(round_competitors))][1]])
     return winners
 
+
 def sort_by_fitness(poblation, fitness_matrix):
     return [x for _, x in sorted(zip(fitness_matrix, poblation))]
 
-# def sort_and_replace(poblation, fitness_matrix, replace_size):
-#     new_poblation = sort_by_fitness(poblation, fitness_matrix)
-#     if replace_size <= 0:
-#         return new_poblation
-#     for i in range(replace_size):  
-#         new_poblation[-i] = new_poblation[i] 
-#     return new_poblation
 
 def mix(winners, mutation_factor, gens_number, standard_derivation):
     new_poblation = []
@@ -68,17 +63,6 @@ def get_sons(first_parent, second_parent, gens_number):
         first_son.append(first_parent[i]) if randint(0,1) == 0 else first_son.append(second_parent[i])
         second_son.append(first_parent[i]) if randint(0,1) == 0 else second_son.append(second_parent[i])
     return first_son, second_son
-
-
-# def gets_sons_with_best_parts(first_parent, second_parent, gens_number):
-#     first_son, second_son = [], []
-#     base_chromosome = [0 for _ in range(gens_number)]
-#     for i in range(gens_number):
-#         first_parent_selection_fitness = float(my_call(url, base_chromosome[:i] + [first_parent[i]] + base_chromosome[i + 1 :]))
-#         second_parent_selection_fitness = float(my_call(url, base_chromosome[:i] + [second_parent[i]] + base_chromosome[i + 1 :]))
-#         first_son.append(first_parent[i]) if first_parent_selection_fitness >= second_parent_selection_fitness else first_son.append(second_parent[i])
-#         second_son.append(first_parent[i]) if first_parent_selection_fitness < second_parent_selection_fitness else second_son.append(second_parent[i])
-#     return first_son, second_son
 
 
 def mutation(son, gens_number, mutation_factor, standard_derivation, mean=0):
@@ -115,27 +99,34 @@ def make_generation(poblation, mutation_factor, gens_number, tournament_size, st
     best_one = poblation[fitness_matrix.index(best_one_fitness)]
     new_poblation = clone(best_one, new_poblation)
 
-    return new_poblation, best_one_fitness, genetic_diversity
-
+    return new_poblation, best_one_fitness, genetic_diversity, best_one
 
 
 def run(poblations_size=200, rounds=200, mutation_factor=5, gens_number=10, tournament_size=2, standard_derivation=15):
     start_time = time.time()
     poblation = create_initial(poblations_size, gens_number)
+
+    genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
+
     data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_" + str(mutation_factor) + "_mut_" + str(tournament_size) + "_tornmnt_siz_" + str(standard_derivation) + "_std_dev.txt", "w+")
     try:
         for i in range(rounds):
-            poblation, best_one_fitness, genetic_diversity = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
+            # Calculo dinamico del factor de mutacion y su desviacion tipica
+            mutation_factor = min(max(int((100 - genetic_diversity) / 10), 3), 25)
+            standard_derivation = min(max(100 - genetic_diversity, 10), 150)
+            poblation, best_one_fitness, genetic_diversity, best_one = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness == 0:
                 data_file.close()
                 print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+                print("La solucion encontrada es:", best_one, "con un valor de fitness", best_one_fitness)
                 return
         data_file.close()
         print("Finalizado con:", poblations_size, "poblacion//", rounds, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
     except:
         data_file.close()
         print("Finalizado con:", poblations_size, "poblacion//", rounds, "rondas//", mutation_factor, "factor de mutacion//", tournament_size, "tamaño de torneo//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+
 
 def collect_data():
     files = glob.glob("*.txt")
@@ -152,6 +143,7 @@ def collect_data():
     plt.legend(loc="upper right", prop={'size': 6})
     plt.show()
 
+
 # params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
 def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
     threads = [Thread(target=run, args=param) for param in params]
@@ -161,25 +153,15 @@ def run_multiple(params=[[200, 200, 7, 10, 2, 15]]):
         thread.join()
 
 
-# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
 
-rounds, gens_number, tournament_size, standard_derivation = 100, 10, 2, 15
+
+# params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
+rounds, gens_number, tournament_size, standard_derivation = 400, 10, 2, 15
 run_multiple([
 [400, rounds, 10, gens_number, 4, 50], 
-[800, rounds, 10, gens_number, 4, 50],
-[1500, rounds, 10, gens_number, 4, 50]])
+[800, rounds, 10, gens_number, 4, 50]])
 
 collect_data()
 
 
-#OPCIONES
-# Forzar mutaciones a los peores
-# Coger la mejor parte de cada padre evaluandolos por partes
-# juntar a los mejores padres
-# eliminar a un numero n de sujetos y clonar a los mejores (aumentando asi la probabilidad) -> mezclarlos
-# mantener un numero de clones de los n mejores en cada ronda
 
-
-#TAREAS
-# hacer que muten mas al principio y menos al final
-# evaluar la diversidad genetica en cada ronda
