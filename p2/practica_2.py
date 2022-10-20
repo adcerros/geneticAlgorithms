@@ -1,6 +1,6 @@
 from time import sleep
 import requests
-from random import randint, gauss
+from random import uniform, gauss, randint
 import glob
 import matplotlib.pyplot as plt
 from threading import Thread
@@ -8,15 +8,16 @@ import statistics
 import time
 
 
-url = "http://163.117.164.219/age/test?c="
-#url = "http://163.117.164.219/age/alfa?c="
+url = "http://memento.evannai.inf.uc3m.es/age/robot4?"
 
 
 
 def my_call(url, chromosome):
-    binary_cromosome = "".join(["{0:08b}".format(gen) for gen in chromosome])
+    params = ""
+    for i, gen in enumerate(chromosome, start=1):
+        params += "c" + str(i) + "=" + str(gen) + "&"
     try:
-        my_request = requests.get(url + binary_cromosome)
+        my_request = requests.get(url + params[:-1])
     except:
         print("Intentando reconectar ...")
         sleep(0.2)
@@ -29,7 +30,7 @@ def evaluate(poblation):
 
 
 def create_initial(poblations_size, gens_number):
-    return [[randint(0,255) for _ in range(gens_number)] for _ in range(poblations_size)]
+    return [[uniform(-180,180) for _ in range(gens_number)] for _ in range(poblations_size)]
 
 
 def tournament(poblation, fitness_matrix, tournament_size):
@@ -68,11 +69,13 @@ def get_sons(first_parent, second_parent, gens_number):
 def mutation(son, gens_number, mutation_factor, standard_derivation, mean=0):
     if randint(0,100) < mutation_factor:
         pos = randint(0, gens_number - 1)
-        new_gen = son[pos] + int(gauss(mean, standard_derivation))
-        if new_gen < 0:
-            new_gen = 0
-        elif new_gen > 255:
-            new_gen = 255
+        new_gen = son[pos] + (gauss(mean, standard_derivation))
+        # PONER AQUI UNA VARIABLE DE LIMITE MAXIMO Y MINIMO Y UN ALEATORIO PARA QUE NO CONVERJAN A LOS VALORES DE 180 
+        # ES DECIR QUE SEA 180 +/- NUM_ALEATORIO
+        if new_gen < -180:
+            new_gen = -180 + uniform(0, 20)
+        elif new_gen > 180:
+            new_gen = 180 - uniform(0, 20)
         son[pos] = new_gen
     return son
 
@@ -106,10 +109,13 @@ def run(poblations_size=200, rounds=200, mutation_factor=5, gens_number=10, tour
     data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_" + str(mutation_factor) + "_mut_" + str(tournament_size) + "_tornmnt_siz_" + str(standard_derivation) + "_std_dev.txt", "w+")
     try:
         for i in range(rounds):
+            print("\nRealizando generacion", i)
             # Calculo dinamico del factor de mutacion y su desviacion tipica
             mutation_factor = min(max(int((100 - genetic_diversity) / 8), 3), 25)
             standard_derivation = min(max(100 - int(genetic_diversity), 10), 150)
             poblation, best_one_fitness, genetic_diversity, best_one = make_generation(poblation, mutation_factor, gens_number, tournament_size, standard_derivation)
+            print("Mejor fitness", best_one_fitness, "Diversidad genetica", genetic_diversity)
+            print("Mejor individuo", best_one)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness == 0:
                 data_file.close()
@@ -155,7 +161,7 @@ def run_multiple(params):
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, mutation_factor, gens_number, tournament_size, standard_derivation
 run_multiple([ 
-[800, 1, 10, 10, 4, 50]
+[100, 50, 10, 4, 4, 20]
 ])
 
 # /////////////////////
