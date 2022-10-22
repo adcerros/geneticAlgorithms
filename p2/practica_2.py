@@ -31,7 +31,7 @@ def evaluate(poblation):
 
 def create_initial(poblations_size, gens_number):
     return [[uniform(-180,180) for _ in range(gens_number)] for _ in range(poblations_size)]
-    
+
 
 def mutation(son, gens_number, standard_derivation=10, mean=0):
     pos = randint(0, gens_number - 1)
@@ -43,12 +43,11 @@ def mutation(son, gens_number, standard_derivation=10, mean=0):
     son[pos] = new_gen
     return son
 
+#DIVERSIDAD GENETICA!!!!!!!!!!
+# genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
 
 def make_generation(poblation, gens_number):
     fitness_matrix = evaluate(poblation)
-    #Calculo de homogeneidad de los datos mediante desviacion tipica
-    new_poblation = mix(poblation, gens_number)
-    #Clonacion del mejor individuo
     best_one_fitness = min(fitness_matrix)
     best_one = poblation[fitness_matrix.index(best_one_fitness)]
     return new_poblation, best_one_fitness, best_one
