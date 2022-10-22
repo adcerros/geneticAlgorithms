@@ -8,59 +8,82 @@ import statistics
 import time
 
 
+
 url = "http://memento.evannai.inf.uc3m.es/age/robot4?"
 
 
 
-def my_call(url, chromosome):
+def my_call(url, subject):
     params = ""
-    for i, gen in enumerate(chromosome, start=1):
+    for i, gen in enumerate(subject, start=1):
         params += "c" + str(i) + "=" + str(gen) + "&"
     try:
         my_request = requests.get(url + params[:-1])
     except:
         print("Intentando reconectar ...")
         sleep(0.2)
-        my_call(url, chromosome)
+        my_call(url, subject)
     return my_request.text
 
 
-def evaluate(poblation):
-    return [float(my_call(url, elem)) for elem in poblation]
+def evaluate(subject):
+    return float(my_call(url, subject))
 
 
 def create_initial(poblations_size, gens_number):
-    return [[uniform(-180,180) for _ in range(gens_number)] for _ in range(poblations_size)]
+    initial_poblation = [[uniform(-180,180) for _ in range(gens_number)] for _ in range(poblations_size)]
+    initial_variances = [[1.0 for _ in range(gens_number)] for _ in range(poblations_size)]
+    fitness_matrix = [evaluate(subject) for subject in initial_poblation]
+    last_results = [[] for _ in range(poblations_size)]
+    return initial_poblation, initial_variances, fitness_matrix, last_results
 
 
-def mutation(son, gens_number, standard_derivation=10, mean=0):
-    pos = randint(0, gens_number - 1)
-    new_gen = son[pos] + (gauss(mean, standard_derivation))
+def mutation(subject, improvements):
+    for gen, gen_variance, _ in subject:
+        print(gen, gen_variance)
+    new_subject = [gen + (gauss(0, gen_variance)) for gen, gen_variance, _ in subject]
     if new_gen < -180:
         new_gen = -180 + uniform(0, 20)
     elif new_gen > 180:
         new_gen = 180 - uniform(0, 20)
-    son[pos] = new_gen
-    return son
+    return subject
 
 #DIVERSIDAD GENETICA!!!!!!!!!!
 # genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
 
-def make_generation(poblation, gens_number):
-    fitness_matrix = evaluate(poblation)
+def check_last_results(subject_last_results, window_size=10):
+    if len(subject_last_results) < window_size:
+        return False
+
+
+
+
+def mutate_and_compare(subject, subject_variances, subject_fitness, subject_last_results):
+    new_subject = [(gen + subject_variance) for gen, subject_variance in zip(subject, subject_variances)]
+    new_subject_fitness = evaluate(new_subject)
+    if new_subject_fitness < subject_fitness:
+        subject_last_results
+
+
+
+def make_generation(poblation, pob_variances, fitness_matrix, last_results):
+    for subject, subject_variance, subject_fitness, subject_last_results in poblation, pob_variances, fitness_matrix, last_results:
+        subject, subject_variance, subject_fitness, subject_last_results = mutate_and_compare(subject, subject_variance, subject_fitness, subject_last_results)
     best_one_fitness = min(fitness_matrix)
     best_one = poblation[fitness_matrix.index(best_one_fitness)]
-    return new_poblation, best_one_fitness, best_one
+    return poblation, best_one_fitness, best_one
 
 
 def run(poblations_size=1, rounds=200, gens_number=10):
     start_time = time.time()
-    poblation = create_initial(poblations_size, gens_number)
+    poblation, pob_variances, fitness_matrix, last_results = create_initial(poblations_size, gens_number)
     data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_.txt", "w+")
     try:
         for i in range(rounds):
             print("\nRealizando generacion", i + 1)
-            poblation, best_one_fitness, best_one = make_generation(poblation, gens_number)
+            poblation, pob_variances, fitness_matrix, last_results = make_generation(poblation, pob_variances, fitness_matrix, last_results)
+            best_one_fitness = min(fitness_matrix)
+            best_one = poblation[fitness_matrix.index(best_one_fitness)]
             print("Mejor fitness", best_one_fitness)
             print("Mejor individuo", best_one)
             data_file.write(str(best_one_fitness) + "\n")
@@ -108,7 +131,7 @@ def run_multiple(params):
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number
 run_multiple([ 
-[800, 500, 4, 4, 20]
+[10, 500, 4]
 ])
 
 # /////////////////////
