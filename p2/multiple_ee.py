@@ -44,21 +44,30 @@ def variances_mutation(subject_variances, learning_rate=1):
 
 def mutate_and_compare(subject, subject_variances, subject_fitness):
     new_subject = [max(min(gen + gauss(0, variance), 180), -180) for gen, variance in zip(subject, subject_variances)]
+    new_variances = []
     new_subject_fitness = evaluate(new_subject)
-    if new_subject_fitness < subject_fitness:
-        subject_last_results.append(1)
-        new_subject_variance, new_subject_last_results = variances_mutation(subject_variances, subject_last_results)
-        return new_subject, new_subject_variance, new_subject_fitness, new_subject_last_results
-    subject_last_results.append(0)
-    subject_variances, subject_last_results = variances_mutation(subject_variances, subject_last_results)
-    return subject, subject_variances, subject_fitness, subject_last_results
+    return [new_subject_fitness, new_subject, new_variances]
 
 
 
 def make_generation(poblation, replacement_rate=5, family_size=200):
     parents = get_parents(poblation, replacement_rate, family_size)
-    return poblation
+    sons = get_sons(parents)
+    new_poblation = remplacement(parents, sons)
+    return new_poblation
 
+
+def remplacement(parents, sons):
+    return parents
+
+
+def get_sons(parents):
+    son = mutation(son)
+    return parents
+
+
+def mutation(son):
+    return son
 
 
 def get_parents(poblation, replacement_rate, family_size):
