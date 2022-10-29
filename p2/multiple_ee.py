@@ -1,6 +1,8 @@
+from cmath import sqrt
+import math
 from time import sleep
 import requests
-from random import random, uniform, gauss
+from random import randint, uniform, gauss
 import glob
 import matplotlib.pyplot as plt
 from threading import Thread
@@ -38,32 +40,34 @@ def create_initial(poblations_size, gens_number):
     return initial_poblation
 
 
-def variances_mutation(subject_variances, learning_rate=1):
-    return subject_variances
-
-
-def mutate_and_compare(subject, subject_variances, subject_fitness):
-    new_subject = [max(min(gen + gauss(0, variance), 180), -180) for gen, variance in zip(subject, subject_variances)]
-    new_variances = []
-    new_subject_fitness = evaluate(new_subject)
-    return [new_subject_fitness, new_subject, new_variances]
-
-
-
-def make_generation(poblation, replacement_rate=5, family_size=200):
+def make_generation(poblation, replacement_rate=5, family_size=2, gens_number=4):
     parents = get_parents(poblation, replacement_rate, family_size)
-    sons = get_sons(parents)
-    new_poblation = remplacement(parents, sons)
+    sons = [mix_and_mutation(parents[i : i + family_size], family_size, gens_number) for i in range(0, len(parents), family_size)]
+    new_poblation = remplacement(poblation, sons)
     return new_poblation
 
 
-def remplacement(parents, sons):
-    return parents
+def remplacement(poblation, sons):
+    poblation_size = len(poblation)
+    for elem in sons:
+        heappush(poblation, elem)
+    return poblation[:poblation_size]
 
 
-def get_sons(parents):
-    son = mutation(son)
-    return parents
+def mix_and_mutation(parents, family_size, gens_number, b=1):
+    # Mix
+    son = [sum([parents[i][1][j] for i in range(family_size)]) / family_size for j in range(gens_number)]
+    son_variances = [parents[randint(0, family_size - 1)][2][j] for j in range(gens_number)]
+    # Mutation
+    son = [max(min(gen + gauss(0, variance), 180), -180) for gen, variance in zip(son, son_variances)]
+    learning_rate = b / sqrt(2 * sqrt(gens_number)) 
+    prime_learning_rate =  b / sqrt(2 * gens_number) 
+    print("UNO")
+    son_variances = [variance * math.exp(gauss(0, learning_rate)) * math.exp(gauss(0, prime_learning_rate)) for variance in son_variances]
+    # Evaluation
+    print("DOS")
+    son_fitness = evaluate(son)
+    return (son_fitness, son, son_variances)
 
 
 def mutation(son):
@@ -88,7 +92,7 @@ def run(poblations_size=1, rounds=200, gens_number=4):
     try:
         for i in range(1, rounds + 1):
             print("\nRealizando generacion", i)
-            poblation = make_generation(poblation)
+            poblation = make_generation(poblation, gens_number)
             best_one_fitness = poblation[0][0]
 
 
@@ -141,10 +145,10 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number
-run_multiple([ 
-[10, 2, 4]
-])
-
+# run_multiple([ 
+# [10, 2, 4]
+# ])
+run(10,2,4)
 # /////////////////////
 
 
