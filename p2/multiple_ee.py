@@ -1,16 +1,18 @@
-from cmath import sqrt
-import math
+from math import sqrt, exp
 from time import sleep
 import requests
 from random import randint, uniform, gauss
 import glob
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 from threading import Thread
 import statistics
 import time
-from heapq import heappop, heappush
 
-
+# Evaluar varianzas para parar
+# Mutaciones controladas con modulo
+# Analizar diversidad genetica
+# Almacenar varianzas y ponerlas en la grafica
 
 url = "http://memento.evannai.inf.uc3m.es/age/robot4?"
 
@@ -35,13 +37,14 @@ def evaluate(subject):
 def create_initial(poblations_size, gens_number):
     initial_poblation = []
     for _ in range(poblations_size):
-        subject = [uniform(-180,180) for _ in range(gens_number)] 
-        heappush(initial_poblation, (evaluate(subject), subject, [uniform(1000, 10000) for _ in range(gens_number)]))
+        subject = [uniform(0, 360) for _ in range(gens_number)] 
+        initial_poblation.append((evaluate(subject), subject, [uniform(10, 100) for _ in range(gens_number)]))
+    initial_poblation.sort()
     return initial_poblation
 
 
-def make_generation(poblation, replacement_rate=5, family_size=2, gens_number=4):
-    parents = get_parents(poblation, replacement_rate, family_size)
+def make_generation(poblation, remplacement_rate, gens_number=4, family_size=2):
+    parents = get_parents(poblation, family_size, remplacement_rate)
     sons = [mix_and_mutation(parents[i : i + family_size], family_size, gens_number) for i in range(0, len(parents), family_size)]
     new_poblation = remplacement(poblation, sons)
     return new_poblation
@@ -49,8 +52,8 @@ def make_generation(poblation, replacement_rate=5, family_size=2, gens_number=4)
 
 def remplacement(poblation, sons):
     poblation_size = len(poblation)
-    for elem in sons:
-        heappush(poblation, elem)
+    poblation = poblation + sons
+    poblation.sort()
     return poblation[:poblation_size]
 
 
@@ -59,25 +62,19 @@ def mix_and_mutation(parents, family_size, gens_number, b=1):
     son = [sum([parents[i][1][j] for i in range(family_size)]) / family_size for j in range(gens_number)]
     son_variances = [parents[randint(0, family_size - 1)][2][j] for j in range(gens_number)]
     # Mutation
-    son = [max(min(gen + gauss(0, variance), 180), -180) for gen, variance in zip(son, son_variances)]
+    son = [(gen + gauss(0, variance)) % 360 for gen, variance in zip(son, son_variances)]
     learning_rate = b / sqrt(2 * sqrt(gens_number)) 
     prime_learning_rate =  b / sqrt(2 * gens_number) 
-    print("UNO")
-    son_variances = [variance * math.exp(gauss(0, learning_rate)) * math.exp(gauss(0, prime_learning_rate)) for variance in son_variances]
+    son_variances = [variance * exp(gauss(0, learning_rate)) * exp(gauss(0, prime_learning_rate)) for variance in son_variances]
     # Evaluation
-    print("DOS")
     son_fitness = evaluate(son)
     return (son_fitness, son, son_variances)
 
 
-def mutation(son):
-    return son
-
-
-def get_parents(poblation, replacement_rate, family_size):
+def get_parents(poblation, family_size, replacement_rate):
     parents = []
     index = 0
-    while len(parents) < replacement_rate * family_size:
+    while replacement_rate * family_size > len(parents):
         real_index = index % len(poblation)
         if real_index / len(poblation) >= uniform(0,1):
             parents.append(poblation[real_index])
@@ -85,27 +82,32 @@ def get_parents(poblation, replacement_rate, family_size):
     return parents
 
 
+def get_and_check_data(poblation, data_file, gens_number):
+    best_one_fitness = poblation[0][0]
+    print("Mejor fitness:", best_one_fitness)
+    variances_mean = statistics.mean([statistics.mean(elem[2]) for elem in poblation])
+    print("Media de las varianzas:", variances_mean)
+    genetic_diversity = statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)])
+    print("Diversidad genetica", genetic_diversity)
+    data_file.write(str(best_one_fitness) + "," + str(variances_mean) + "," + str(genetic_diversity) + "\n")
+    if best_one_fitness <= 1.0e-06 or variances_mean <= 1.0e-15 or genetic_diversity < 1:
+        print("La solucion encontrada es:", poblation[0][1], "con un valor de fitness", best_one_fitness, "Varianzas", poblation[0][2])
+        return True
+    return False
+
+
 def run(poblations_size=1, rounds=200, gens_number=4):
     start_time = time.time()
     poblation = create_initial(poblations_size, gens_number)
     data_file = open(str(poblations_size) + "_pob_" +  str(rounds) +  "_runs_.txt", "w+")
+    remplacement_rate = int(len(poblation) / 2)
     try:
         for i in range(1, rounds + 1):
             print("\nRealizando generacion", i)
-            poblation = make_generation(poblation, gens_number)
-            best_one_fitness = poblation[0][0]
-
-
-
-
-
-            #genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
-            # print("Mejor fitness", best_one_fitness, "Diversidad genetica", genetic_diversity)
-            # data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
-            if best_one_fitness <= 1.0e-06:
+            poblation = make_generation(poblation, remplacement_rate, gens_number)
+            if get_and_check_data(poblation, data_file, gens_number):
                 data_file.close()
                 print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
-                print("La solucion encontrada es:", poblation[0][1], "con un valor de fitness", best_one_fitness, "Varianzas", poblation[0][2])
                 return
         data_file.close()
         print("Finalizado normal con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
@@ -130,6 +132,25 @@ def collect_data():
     plt.show()
 
 
+    # Create 2x2 sub plots
+    gs = gridspec.GridSpec(2, 2)
+
+    fig = plt.figure()
+    ax1 = fig.add_subplot(gs[0, :])
+    ax1.plot([x for x in range(1, len(data) + 1)], [float(elem[0]) for elem in data], label=files[index])
+    ax1.title("Fitness")
+    ax1.legend(loc="upper right", prop={'size': 6})
+    
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax2.plot([x for x in range(1, len(data) + 1)], [float(elem[1]) for elem in data], label=files[index])
+    ax2.title("Media de varianzas")
+    ax2.legend(loc="upper right", prop={'size': 6})
+
+    ax2 = fig.add_subplot(gs[1, 1])
+    ax2.plot([x for x in range(1, len(data) + 1)], [float(elem[2]) for elem in data], label=files[index])
+    ax2.title("Variedad genetica (desviacion tipica media)")
+    ax2.legend(loc="upper right", prop={'size': 6})
+
 def run_multiple(params):
     threads = [Thread(target=run, args=param) for param in params]
     for thread in threads:
@@ -148,7 +169,7 @@ def run_multiple(params):
 # run_multiple([ 
 # [10, 2, 4]
 # ])
-run(10,2,4)
+# run(10,10,4)
 # /////////////////////
 
 
