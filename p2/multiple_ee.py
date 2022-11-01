@@ -47,6 +47,9 @@ def make_generation(poblation, remplacement_rate, gens_number, learning_rate, pr
     parents = get_parents(poblation, family_size, remplacement_rate)
     sons = [mix_and_mutation(parents[i : i + family_size], family_size, gens_number, learning_rate, prime_learning_rate) for i in range(0, len(parents), family_size)]
     new_poblation = remplacement(poblation, sons)
+    # if statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)]) < 10:
+    #     random_poblation = create_initial(len(poblation), gens_number)
+    #     new_poblation = remplacement(poblation, random_poblation)
     return new_poblation
 
 
@@ -74,7 +77,7 @@ def get_parents(poblation, family_size, replacement_rate):
     index = 0
     while replacement_rate * family_size > len(parents):
         real_index = index % len(poblation)
-        if real_index / len(poblation) >= uniform(0,1):
+        if real_index / len(poblation) <= uniform(0,1):
             parents.append(poblation[real_index])
         index += 1
     return parents
@@ -162,13 +165,14 @@ def run_multiple(params):
 
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
-# params = poblation_size, rounds, gens_number
-# run_multiple([ 
-# [1000, 100, 4, 5, 2],
-# [1000, 100, 4, 5, 4],
-# [1000, 100, 4, 10, 2],
-# [1000, 100, 4, 10, 4]
-# ])
+# params = poblation_size, rounds, gens_number, replacement, family
+poblation_size, rounds, gens_number = 100, 1000, 4
+run_multiple([
+[poblation_size, rounds, gens_number, 25, 2],
+[poblation_size, rounds, gens_number, 50, 2],
+[poblation_size, rounds, gens_number, 75, 4],
+[poblation_size, rounds, gens_number, 75, 8]
+])
 # /////////////////////
 
 
