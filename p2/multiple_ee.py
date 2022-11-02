@@ -9,12 +9,8 @@ from threading import Thread
 import statistics
 import time
 
-# Evaluar varianzas para parar
-# Mutaciones controladas con modulo
-# Analizar diversidad genetica
-# Almacenar varianzas y ponerlas en la grafica
 
-url = "http://memento.evannai.inf.uc3m.es/age/robot4?"
+url = "http://memento.evannai.inf.uc3m.es/age/robot10?"
 
 
 def my_call(url, subject):
@@ -47,9 +43,12 @@ def make_generation(poblation, remplacement_rate, gens_number, learning_rate, pr
     parents = get_parents(poblation, family_size, remplacement_rate)
     sons = [mix_and_mutation(parents[i : i + family_size], family_size, gens_number, learning_rate, prime_learning_rate) for i in range(0, len(parents), family_size)]
     new_poblation = remplacement(poblation, sons)
-    # if statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)]) < 10:
-    #     random_poblation = create_initial(len(poblation), gens_number)
-    #     new_poblation = remplacement(poblation, random_poblation)
+    # if statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)]) < 50:
+    #     print("Activada alerta de diversidad genetica!")
+    #     random_pob = create_initial(int(len(poblation) / 2), gens_number)
+    #     new_poblation = new_poblation[:-len(random_pob)] + random_pob
+    #     new_poblation.sort()
+    #     return new_poblation
     return new_poblation
 
 
@@ -98,27 +97,6 @@ def get_and_check_data(poblation, data_file, gens_number):
     return False
 
 
-def run(poblations_size=1, rounds=200, gens_number=4, remplacement_rate=5, family_size=2, b=1):
-    start_time = time.time()
-    poblation = create_initial(poblations_size, gens_number)
-    data_file = open(str(poblations_size) + "_pob_" + str(family_size) + "_fmly_" + str(remplacement_rate) +  "_rmplcment_.txt", "w+")
-    learning_rate = b / sqrt(2 * sqrt(gens_number)) 
-    prime_learning_rate =  b / sqrt(2 * gens_number) 
-    try:
-        for i in range(1, rounds + 1):
-            # print("\nRealizando generacion", i)
-            poblation = make_generation(poblation, int(len(poblation) * remplacement_rate / 100), gens_number, learning_rate, prime_learning_rate, family_size)
-            if get_and_check_data(poblation, data_file, gens_number):
-                data_file.close()
-                print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
-                return
-        data_file.close()
-        print("Finalizado normal con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
-    except:
-        data_file.close()
-        print("Excepcion con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
-
-
 def collect_data():
     files = glob.glob("*.txt")
     rounds_data = [[line[:-2].split(',') for line in open(file)] for file in files]
@@ -151,6 +129,27 @@ def collect_data():
     plt.show()
 
 
+def run(poblations_size=1, rounds=200, gens_number=4, remplacement_rate=5, family_size=2, b=1):
+    start_time = time.time()
+    poblation = create_initial(poblations_size, gens_number)
+    data_file = open(str(poblations_size) + "_pob_" + str(family_size) + "_fmly_" + str(remplacement_rate) +  "_rmplcment_.txt", "w+")
+    learning_rate = b / sqrt(2 * sqrt(gens_number)) 
+    # prime_learning_rate =  b / sqrt(2 * gens_number) 
+    try:
+        for i in range(1, rounds + 1):
+            # print("\nRealizando generacion", i)
+            poblation = make_generation(poblation, int(len(poblation) * remplacement_rate / 100), gens_number, learning_rate, 1, family_size)
+            if get_and_check_data(poblation, data_file, gens_number):
+                data_file.close()
+                print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+                return
+        data_file.close()
+        print("Finalizado normal con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+    except:
+        data_file.close()
+        print("Excepcion con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+
+
 def run_multiple(params):
     threads = [Thread(target=run, args=param) for param in params]
     for thread in threads:
@@ -166,12 +165,12 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number, replacement, family
-poblation_size, rounds, gens_number = 100, 1000, 4
+poblation_size, rounds, gens_number = 1000, 100000, 10
 run_multiple([
-[poblation_size, rounds, gens_number, 25, 2],
-[poblation_size, rounds, gens_number, 50, 2],
+[poblation_size, rounds, gens_number, 75, 2],
 [poblation_size, rounds, gens_number, 75, 4],
-[poblation_size, rounds, gens_number, 75, 8]
+[poblation_size, rounds, gens_number, 50, 2],
+[5000, rounds, gens_number, 50, 4]
 ])
 # /////////////////////
 
