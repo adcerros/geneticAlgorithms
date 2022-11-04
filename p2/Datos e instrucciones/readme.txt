@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////
-Intrucciones para la ejecución del programa:
+Intrucciones para la ejecución de cualquiera de las dos versiones del programa:
 
 Los parametros de entrada del programa contienen datos por defecto por 
 lo que puede ejecutarse el script directamente en cualquier IDE o terminal.

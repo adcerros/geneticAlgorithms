@@ -102,8 +102,6 @@ def run(poblations_size=1, rounds=200, gens_number=4):
             best_one_fitness = min(fitness_matrix)
             genetic_diversity = statistics.mean([statistics.pstdev([elem[column] for elem in poblation]) for column in range(gens_number)])
             print("Mejor fitness", best_one_fitness, "Diversidad genetica", genetic_diversity)
-            for variances in pob_variances:
-                print(variances)
             data_file.write(str(best_one_fitness) + "," + str(genetic_diversity) + "\n")
             if best_one_fitness <= 1.0e-06:
                 data_file.close()
@@ -154,9 +152,9 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number
-# run_multiple([ 
-# [10, 100000, 4]
-# ])
+run_multiple([ 
+[100, 1000, 4]
+])
 
 # /////////////////////
 

@@ -46,18 +46,18 @@ def make_generation(poblation, remplacement_rate, gens_number, learning_rate, pr
     return new_poblation
 
 # v1 (u + a)
-def remplacement(poblation, sons):
-    poblation_size = len(poblation)
-    poblation = poblation + sons
-    poblation.sort()
-    return poblation[:poblation_size]
-
-# # v1 (u, a)
 # def remplacement(poblation, sons):
-#     poblation = poblation[:len(sons)]
+#     poblation_size = len(poblation)
 #     poblation = poblation + sons
 #     poblation.sort()
-#     return poblation
+#     return poblation[:poblation_size]
+
+# v2 (u, a)
+def remplacement(poblation, sons):
+    poblation = poblation[:len(sons)]
+    poblation = poblation + sons
+    poblation.sort()
+    return poblation
 
 
 def mix_and_mutation(parents, family_size, gens_number, learning_rate, prime_learning_rate):
@@ -90,9 +90,9 @@ def get_and_check_data(poblation, data_file, gens_number):
     genetic_diversity = statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)])
     data_file.write(str(best_one_fitness) + "," + str(variances_mean) + "," + str(genetic_diversity) + "\n")
     # Descomentar para obtener datos cada ciclo
-    # print("Mejor fitness:", best_one_fitness)
-    # print("Media de las varianzas:", variances_mean)
-    # print("Diversidad genetica", genetic_diversity)
+    print("Mejor fitness:", best_one_fitness)
+    print("Media de las varianzas:", variances_mean)
+    print("Diversidad genetica", genetic_diversity)
     if best_one_fitness <= 1.0e-06 or variances_mean <= 1.0e-15:
         print("La solucion encontrada es:", poblation[0][1], "con un valor de fitness", best_one_fitness, "Varianzas", poblation[0][2])
         return True
@@ -139,17 +139,17 @@ def run(poblations_size=1, rounds=200, gens_number=4, remplacement_rate=5, famil
     prime_learning_rate =  b / sqrt(2 * gens_number) 
     try:
         for i in range(1, rounds + 1):
-            # print("\nRealizando generacion", i)
+            print("\nRealizando generacion", i)
             poblation = make_generation(poblation, int(len(poblation) * remplacement_rate / 100), gens_number, learning_rate, prime_learning_rate, family_size)
             if get_and_check_data(poblation, data_file, gens_number):
                 data_file.close()
-                print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+                print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size + int(len(poblation) * remplacement_rate / 100) * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
                 return
         data_file.close()
-        print("Finalizado normal con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+        print("Finalizado normal con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size + int(len(poblation) * remplacement_rate / 100) * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
     except:
         data_file.close()
-        print("Excepcion con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size * rounds, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
+        print("Excepcion con:", poblations_size, "poblacion//", rounds, "rondas//", poblations_size + int(len(poblation) * remplacement_rate / 100) * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
 
 
 def run_multiple(params):
@@ -167,12 +167,9 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number, replacement, family, b
-poblation_size, rounds, gens_number = 200, 10000, 10
+poblation_size, rounds, gens_number = 200, 2, 10
 run_multiple([
-[poblation_size, rounds, gens_number, 75, 2, 0.1],
-[poblation_size, rounds, gens_number, 75, 2, 0.2],
-[poblation_size, rounds, gens_number, 75, 2, 0.4],
-[poblation_size, rounds, gens_number, 75, 2, 0.8]
+[poblation_size, rounds, gens_number, 60, 2, 0.9]
 ])
 # /////////////////////
 
