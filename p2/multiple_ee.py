@@ -43,20 +43,21 @@ def make_generation(poblation, remplacement_rate, gens_number, learning_rate, pr
     parents = get_parents(poblation, family_size, remplacement_rate)
     sons = [mix_and_mutation(parents[i : i + family_size], family_size, gens_number, learning_rate, prime_learning_rate) for i in range(0, len(parents), family_size)]
     new_poblation = remplacement(poblation, sons)
-    # if statistics.mean([statistics.pstdev([elem[1][column] for elem in poblation]) for column in range(gens_number)]) < 50:
-    #     print("Activada alerta de diversidad genetica!")
-    #     random_pob = create_initial(int(len(poblation) / 2), gens_number)
-    #     new_poblation = new_poblation[:-len(random_pob)] + random_pob
-    #     new_poblation.sort()
-    #     return new_poblation
     return new_poblation
 
-
+# v1 (u + a)
 def remplacement(poblation, sons):
     poblation_size = len(poblation)
     poblation = poblation + sons
     poblation.sort()
     return poblation[:poblation_size]
+
+# # v1 (u, a)
+# def remplacement(poblation, sons):
+#     poblation = poblation[:len(sons)]
+#     poblation = poblation + sons
+#     poblation.sort()
+#     return poblation
 
 
 def mix_and_mutation(parents, family_size, gens_number, learning_rate, prime_learning_rate):
@@ -165,12 +166,12 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number, replacement, family
-poblation_size, rounds, gens_number = 1000, 100000, 10
+poblation_size, rounds, gens_number = 100, 1000, 10
 run_multiple([
 [poblation_size, rounds, gens_number, 75, 2],
 [poblation_size, rounds, gens_number, 75, 4],
 [poblation_size, rounds, gens_number, 50, 2],
-[5000, rounds, gens_number, 50, 4]
+[poblation_size, rounds, gens_number, 50, 4]
 ])
 # /////////////////////
 
