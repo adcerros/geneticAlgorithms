@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from threading import Thread
 import statistics
 import time
+import matplotlib.gridspec as gridspec
 
 
 
@@ -121,16 +122,20 @@ def run(poblations_size=1, rounds=200, gens_number=4):
 def collect_data():
     files = glob.glob("*.txt")
     rounds_data = [[line[:-2].split(',') for line in open(file)] for file in files]
-    plt.subplot(1,2,1)
-    plt.title("Fitness")
+    gs = gridspec.GridSpec(1, 2)
+    fig = plt.figure()
+    ax1 = fig.add_subplot(gs[0, 0])
     for index, data in enumerate(rounds_data):
-        plt.plot([x for x in range(1, len(data) + 1)], [float(elem[0]) for elem in data], label=files[index])
-    plt.legend(loc="upper right", prop={'size': 6})
-    plt.subplot(1,2,2)
-    plt.title("Variedad genetica (desviacion tipica media)")
+        ax1.plot([x for x in range(1, len(data) + 1)], [float(elem[0]) for elem in data], label=files[index])
+    ax1.set_title("Fitness (log)")
+    ax1.set_yscale('log')
+    ax1.legend(loc="upper right", prop={'size': 6})
+
+    ax2 = fig.add_subplot(gs[0, 1])
     for index, data in enumerate(rounds_data):
-        plt.plot([x for x in range(1, len(data) + 1)], [float(elem[1]) for elem in data], label=files[index])
-    plt.legend(loc="upper right", prop={'size': 6})
+        ax2.plot([x for x in range(1, len(data) + 1)], [float(elem[1]) for elem in data], label=files[index])
+    ax2.set_title("Variedad genetica (desviacion tipica media)")
+    ax2.legend(loc="upper right", prop={'size': 6})
     plt.show()
 
 
@@ -149,9 +154,9 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number
-run_multiple([ 
-[10, 100000, 4]
-])
+# run_multiple([ 
+# [10, 100000, 4]
+# ])
 
 # /////////////////////
 

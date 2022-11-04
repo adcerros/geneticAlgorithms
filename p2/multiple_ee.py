@@ -34,7 +34,7 @@ def create_initial(poblations_size, gens_number):
     initial_poblation = []
     for _ in range(poblations_size):
         subject = [uniform(0, 360) for _ in range(gens_number)] 
-        initial_poblation.append((evaluate(subject), subject, [uniform(100, 1000) for _ in range(gens_number)]))
+        initial_poblation.append((evaluate(subject), subject, [uniform(0, 360) for _ in range(gens_number)]))
     initial_poblation.sort()
     return initial_poblation
 
@@ -66,6 +66,7 @@ def mix_and_mutation(parents, family_size, gens_number, learning_rate, prime_lea
     son_variances = [parents[randint(0, family_size - 1)][2][j] for j in range(gens_number)]
     # Mutation
     son = [(gen + gauss(0, variance)) % 360 for gen, variance in zip(son, son_variances)]
+    # son_variances = [variance * exp(gauss(0, learning_rate)) for variance in son_variances]
     son_variances = [variance * exp(gauss(0, learning_rate)) * exp(gauss(0, prime_learning_rate)) for variance in son_variances]
     # Evaluation
     son_fitness = evaluate(son)
@@ -135,11 +136,11 @@ def run(poblations_size=1, rounds=200, gens_number=4, remplacement_rate=5, famil
     poblation = create_initial(poblations_size, gens_number)
     data_file = open(str(poblations_size) + "_pob_" + str(family_size) + "_fmly_" + str(remplacement_rate) +  "_rmplcment_.txt", "w+")
     learning_rate = b / sqrt(2 * sqrt(gens_number)) 
-    # prime_learning_rate =  b / sqrt(2 * gens_number) 
+    prime_learning_rate =  b / sqrt(2 * gens_number) 
     try:
         for i in range(1, rounds + 1):
             # print("\nRealizando generacion", i)
-            poblation = make_generation(poblation, int(len(poblation) * remplacement_rate / 100), gens_number, learning_rate, 1, family_size)
+            poblation = make_generation(poblation, int(len(poblation) * remplacement_rate / 100), gens_number, learning_rate, prime_learning_rate, family_size)
             if get_and_check_data(poblation, data_file, gens_number):
                 data_file.close()
                 print("Finalizado con:", poblations_size, "poblacion//", i, "rondas//", poblations_size * i, "llamadas al sistema//", round((time.time() - start_time) / 60, 2), "min de tiempo transcurrido")
@@ -165,13 +166,10 @@ def run_multiple(params):
 
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
-# params = poblation_size, rounds, gens_number, replacement, family
-poblation_size, rounds, gens_number = 100, 1000, 10
+# params = poblation_size, rounds, gens_number, replacement, family, b
+poblation_size, rounds, gens_number = 10, 10000, 10
 run_multiple([
-[poblation_size, rounds, gens_number, 75, 2],
-[poblation_size, rounds, gens_number, 75, 4],
-[poblation_size, rounds, gens_number, 50, 2],
-[poblation_size, rounds, gens_number, 50, 4]
+[poblation_size, rounds, gens_number, 75, 2, 0.2]
 ])
 # /////////////////////
 
