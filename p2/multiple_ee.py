@@ -134,7 +134,7 @@ def collect_data():
 def run(poblations_size=1, rounds=200, gens_number=4, remplacement_rate=5, family_size=2, b=1):
     start_time = time.time()
     poblation = create_initial(poblations_size, gens_number)
-    data_file = open(str(poblations_size) + "_pob_" + str(family_size) + "_fmly_" + str(remplacement_rate) +  "_rmplcment_.txt", "w+")
+    data_file = open(str(poblations_size) + "_pob_" + str(family_size) + "_fmly_" + str(remplacement_rate) +  "_rmplcment_" + str(b) + "_b.txt", "w+")
     learning_rate = b / sqrt(2 * sqrt(gens_number)) 
     prime_learning_rate =  b / sqrt(2 * gens_number) 
     try:
@@ -167,9 +167,12 @@ def run_multiple(params):
 
 # COMENTAR SI SE DESEA UNICAMENTE GENERAR LAS GRAFICAS
 # params = poblation_size, rounds, gens_number, replacement, family, b
-poblation_size, rounds, gens_number = 10, 10000, 10
+poblation_size, rounds, gens_number = 200, 10000, 10
 run_multiple([
-[poblation_size, rounds, gens_number, 75, 2, 0.2]
+[poblation_size, rounds, gens_number, 75, 2, 0.1],
+[poblation_size, rounds, gens_number, 75, 2, 0.2],
+[poblation_size, rounds, gens_number, 75, 2, 0.4],
+[poblation_size, rounds, gens_number, 75, 2, 0.8]
 ])
 # /////////////////////
 
